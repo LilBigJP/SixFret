@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<!-- Built-in patches for the Guitar Hero Live eboot.bin (CUSA02410 and CUSA02188, v01.08): none yet.
+     Each line may carry a signature (Pattern/At) so it is found in any build whose code matches
+     (scripts/patches.py). -->
+<Patch>
+    <TitleID>
+        <ID>CUSA02410</ID>
+        <ID>CUSA02188</ID>
+    </TitleID>
+</Patch>

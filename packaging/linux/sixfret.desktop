@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Six Fret
+Comment=the game (PS4) native PC port (bring your own game)
+Exec=AppRun
+Icon=sixfret
+Categories=Game;
+Terminal=false
+StartupWMClass=sixfret

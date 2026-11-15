@@ -1,0 +1,23 @@
+#!/bin/sh
+# Play SixFret.app (packaging/macos/package.sh): starts the game with the saved settings and no
+# launcher window, as Play SixFret.exe does on Windows: SixFret --play, from the SixFret.app beside
+# this app, else the one in Applications. A start that fails (no game folder chosen yet, a missing
+# file) is shown in an alert: opened from the Finder, nobody would see the message otherwise.
+here=$(cd -- "$(dirname -- "$0")/../../.." && pwd)
+for app in "$here/SixFret.app" /Applications/SixFret.app "$HOME/Applications/SixFret.app"; do
+    if [ -x "$app/Contents/MacOS/SixFret" ]; then
+        errors=$(mktemp -t play-sixfret)
+        "$app/Contents/MacOS/SixFret" --play 2>"$errors"
+        status=$?
+        if [ "$status" -ne 0 ] && [ -s "$errors" ]; then
+            message=$(tail -n 3 "$errors" | tr '"\\' "'/")
+            osascript -e "display alert \"Play SixFret\" message \"$message
+
+Open SixFret to choose the game folder or to read the game log.\"" >/dev/null 2>&1
+        fi
+        rm -f "$errors"
+        exit "$status"
+    fi
+done
+osascript -e 'display alert "Play SixFret" message "SixFret.app was not found beside Play SixFret or in Applications."' >/dev/null 2>&1
+exit 1

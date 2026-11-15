@@ -1,0 +1,68 @@
+Six Fret - the game (PS4) for PC
+==================================
+
+No game files are included. You need your own copy of the game (CUSA02410) as a folder
+containing eboot.bin, sce_module and sce_sys. Tested: CUSA02410 version 01.01.
+
+Requirements
+- Windows 10 (1903 or newer) or Windows 11, 64-bit.
+- A 64-bit processor with AVX (Intel Sandy Bridge 2011 or newer, AMD FX or newer).
+- A graphics card with Vulkan 1.3 and an up-to-date driver.
+  Nothing else: Python and the libraries are inside this folder.
+
+Starting
+1. Extract this folder anywhere, for example C:\Games\sixfret-windows (not inside the zip).
+2. Open "SixFret.exe". If Windows shows "Windows protected your PC", click More info,
+   then Run anyway: the program is not digitally signed.
+3. On the Play page, click "Choose the the game folder..." and select the folder with eboot.bin.
+   The ready check below the picture tells whether everything is in place.
+4. Adjust the quick settings, or the Graphics, Display & FPS, Game and Controls pages in the
+   sidebar, then click PLAY. The first start takes a little longer while the game image is
+   prepared.
+
+"Play SixFret.exe" starts the game with the saved settings without opening the launcher
+(for a desktop shortcut, or Steam's "Add a Non-Steam Game").
+
+Updates: when a new version is out, the launcher shows it at the bottom left; "Update" downloads
+and installs it and opens the launcher again where you were (saves, settings and mods are
+kept): no new zip to download or unpack. Advanced -> "Check for updates" checks by hand.
+
+While playing
+- Insert on the keyboard, or R3 + L2 on a controller, opens the port's menu (display mode,
+  VSync, frame rate limit, controller vibration, mouse camera, overlay, and the Game tab's
+  Japanese voices, cheats: No damage, Infinite special attack, Unlock all character; and
+  achievements on or off). Quit to desktop at its bottom ends the game (it asks first: what
+  the game has not saved yet is lost).
+- Japanese voices (Settings -> Game, or the menu's Game tab): the original Japanese voice
+  acting, with subtitles and text in the game language.
+- Settings -> Game: skip the startup logos, the opening movie or the 1954 tutorial stage, and
+  the same cheats. Unlock all character is kept in your save: the character stay unlocked when it is
+  turned off.
+- Settings -> Achievements: the trophies you unlocked, and Unlock achievements (off: the game
+  unlocks none and shows no notices).
+- Render resolution in that menu draws the game above 1080p, up to 4K and 8K (Apply and
+  restart).
+- Match refresh rate (on by default): in Borderless and Fullscreen, a display whose refresh
+  rate is not a multiple of 60 (144 Hz) runs at 120 Hz while the game runs, so every frame
+  lasts the same; the game's frame clock then follows the display's own.
+- Keyboard: WASD walk, Q / E turn, mouse or arrows move the camera, left click normal attack,
+  right click strong attack, Space Cross, Left Shift Circle, Return Options.
+- The add-ons (pre-order unlocks, extras figure sets) are unlocked; Settings turns that off.
+- Online play (VS Mode) is not supported yet; playing it between two copies of the port is
+  being looked at.
+
+Mods and patches
+- Put each mod in its own folder (or a .zip) under mods\, holding the game's folders with the
+  files it replaces (sound\st\..., ...). Turn them on and order them on "Mods & patches" in the
+  launcher: when two mods change the same file, the lower one wins. The game files are never
+  changed. A mod.json (name, author, version, description, url) and a preview picture are shown.
+- Third-party patches: shadPS4/GoldHEN XML files for the game 01.01 in patches\, chosen on the
+  same page.
+
+Files
+- Saves, the shader cache and last_run.log are in the "user" folder. Keep it when you update.
+- settings.json (launcher) and sixfret.ini (display and input) hold your settings.
+
+If the game does not start, open Advanced > Show the last game log in the launcher.
+
+Questions, bug reports and news: the project's Discord server, https://discord.gg/VVthdPE4q
