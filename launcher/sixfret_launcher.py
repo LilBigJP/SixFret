@@ -1597,6 +1597,8 @@ class Launcher:
              'with no fret held.')
         text('On a gamepad Cross, Circle and Triangle are the black frets, Square, L1 and R1 the white ones, and '
              'the left stick strums. Every key can be changed on the Controls page.')
+        text('A real guitar: plug in the receiver of a PS4 or PS3 / Wii U Guitar Hero Live guitar and switch the '
+             'guitar on; the port picks it up, also while the game runs. An Xbox 360 guitar plays as a gamepad.')
         self.section(page, 'Menus')
         text('I J K L move through menus (the guitar\'s direction knob), black fret 1 (A) selects and black fret 2 '
              '(S) goes back. Return pauses a song. Space is the Hero Power button, G the GHTV button. Insert opens '

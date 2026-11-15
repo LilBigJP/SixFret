@@ -584,9 +584,114 @@ static ABI int32_t pad_close(int32_t handle) {
  *   d-pad   the guitar's direction knob (menus); Options: pause; L3: Hero Power button;
  *           R3: the GHTV button
  *   whammy  right stick X, tilt: right stick Y (0x80 at rest)
- * Until a real receiver is read, the guitar is played from the keyboard or a gamepad through the
- * same mapping as the standard pad: the buttons are the game's own bits, the left stick (or the
+ * A real receiver is read directly (above); without one, or beside it, the guitar is played from
+ * the keyboard or a gamepad through the same mapping as the standard pad: the buttons are the game's own bits, the left stick (or the
  * d-pad's up and down, with SF_GUITAR_DPAD_STRUM=1) strums. */
+/* ---- A real guitar: the game's wireless receiver, read over USB HID (SDL's hidapi) ----
+ * The PS4 receiver (1430:07bb) and the PS3 / Wii U one (12ba:074b) send the same report:
+ *   byte 0  frets: 01 white 1, 02 black 1, 04 black 2, 08 black 3, 10 white 2, 20 white 3
+ *   byte 1  01 Hero Power, 02 pause, 04 GHTV, 10 the console button
+ *   byte 2  the direction knob as a hat (0 up, clockwise to 7; 8 or 15 at rest)
+ *   byte 4  strum bar (00 up, 80 rest, ff down), byte 6 whammy bar (80 rest to ff)
+ *   byte 19 tilt
+ * Both stop sending unless they are poked every few seconds: the PS4 one with the report the
+ * game itself sends through scePadOutputReport (30 02 08 ..), which is passed on, the PS3 one
+ * with 02 08 20 00... The layout and the pokes are those of Linux's hid-sony driver and the
+ * Clone Hero wiki. SF_GUITAR_HID=0 leaves the receiver alone; SF_GUITAR_TRACE=1 prints each
+ * report that differs from the last. */
+enum { GHL_NONE, GHL_PS4, GHL_PS3 };
+static struct {
+    SDL_hid_device *device;
+    int kind, tried_init, said_missing;
+    uint64_t next_open, next_poke;
+    uint8_t report[64];
+    int size;
+} receiver;
+static int guitar_env(const char *name, int otherwise) {
+    const char *t=getenv(name);
+    return t && *t ? *t!='0' : otherwise;
+}
+static void receiver_close(const char *why) {
+    if (!receiver.device) return;
+    printf("Runtime: guitar receiver %s\n",why);
+    SDL_hid_close(receiver.device);
+    receiver.device=NULL; receiver.kind=GHL_NONE; receiver.size=0;
+}
+static void receiver_poke(uint64_t now) {
+    static const uint8_t ps4[9]={0x30,0x02,0x08,0x0a,0,0,0,0,0};
+    static const uint8_t ps3[9]={0x00,0x02,0x08,0x20,0,0,0,0,0}; /* no report number: hidapi's leading 0 */
+    if (!receiver.device || now<receiver.next_poke) return;
+    receiver.next_poke=now+4000000;
+    const uint8_t *data=receiver.kind==GHL_PS4 ? ps4 : ps3;
+    if (SDL_hid_write(receiver.device,data,9)<0 && receiver.kind==GHL_PS3) {
+        uint8_t feature[9]; memcpy(feature,ps3,9);
+        SDL_hid_send_feature_report(receiver.device,feature,9); /* drivers that take it as a control transfer only */
+    }
+}
+static void receiver_open(uint64_t now) {
+    static const struct { uint16_t vendor, product; int kind; const char *name; } known[]={
+        {0x1430,0x07bb,GHL_PS4,"PS4"}, {0x12ba,0x074b,GHL_PS3,"PS3 / Wii U"},
+    };
+    if (receiver.device || now<receiver.next_open || !guitar_env("SF_GUITAR_HID",1)) return;
+    receiver.next_open=now+2000000;
+    if (!receiver.tried_init) { receiver.tried_init=1; if (SDL_hid_init()) { receiver.next_open=UINT64_MAX; return; } }
+    for (size_t i=0;i<sizeof(known)/sizeof(*known);++i) {
+        SDL_hid_device *device=SDL_hid_open(known[i].vendor,known[i].product,NULL);
+        if (!device) continue;
+        SDL_hid_set_nonblocking(device,1);
+        receiver.device=device; receiver.kind=known[i].kind; receiver.next_poke=0; receiver.size=0;
+        printf("Runtime: Guitar Hero Live receiver found (%s, %04x:%04x): the guitar plays the game\n",
+               known[i].name,known[i].vendor,known[i].product);
+        receiver_poke(now);
+        return;
+    }
+    if (!receiver.said_missing) {
+        receiver.said_missing=1;
+        puts("Runtime: no Guitar Hero Live receiver plugged in (keyboard or gamepad plays the guitar; it is picked up when plugged in)");
+    }
+}
+/* The newest report of the receiver over the keyboard's and gamepad's sample. */
+static void receiver_sample(PadData *d, uint8_t *strum) {
+    const uint64_t now=now_us();
+    receiver_open(now);
+    if (!receiver.device) return;
+    receiver_poke(now);
+    uint8_t report[64];
+    for (;;) {
+        int n=SDL_hid_read(receiver.device,report,sizeof(report));
+        if (n<0) { receiver_close("unplugged"); return; }
+        if (n==0) break;
+        if (n<7) continue;
+        if (guitar_env("SF_GUITAR_TRACE",0) && (n!=receiver.size || memcmp(report,receiver.report,(size_t)n))) {
+            printf("Guitar trace:");
+            for (int i=0;i<n && i<27;++i) printf(" %02x",report[i]);
+            putchar('\n');
+        }
+        memcpy(receiver.report,report,(size_t)n); receiver.size=n;
+    }
+    if (receiver.size<7) return;
+    const uint8_t *r=receiver.report;
+    if (r[0]&0x01) d->buttons|=BTN_SQUARE;
+    if (r[0]&0x02) d->buttons|=BTN_CROSS;
+    if (r[0]&0x04) d->buttons|=BTN_CIRCLE;
+    if (r[0]&0x08) d->buttons|=BTN_TRIANGLE;
+    if (r[0]&0x10) d->buttons|=BTN_L1;
+    if (r[0]&0x20) d->buttons|=BTN_R1;
+    if (r[1]&0x01) d->buttons|=BTN_L3;      /* Hero Power */
+    if (r[1]&0x02) d->buttons|=BTN_OPTIONS; /* pause */
+    if (r[1]&0x04) d->buttons|=BTN_R3;      /* GHTV */
+    static const uint32_t hat[8]={BTN_UP,BTN_UP|BTN_RIGHT,BTN_RIGHT,BTN_RIGHT|BTN_DOWN,BTN_DOWN,BTN_DOWN|BTN_LEFT,
+                                  BTN_LEFT,BTN_LEFT|BTN_UP};
+    if ((r[2]&0x0f)<8) d->buttons|=hat[r[2]&0x0f];
+    if (r[4]<0x40) *strum=0x00; else if (r[4]>0xc0) *strum=0xff;
+    d->right_x=r[6];
+    if (receiver.size>19) d->right_y=r[19];
+}
+/* An Xbox 360 Guitar Hero Live guitar is an ordinary XInput pad whose strum bar is the d-pad. */
+static int gamepad_is_guitar(void) {
+    const char *name=gamepad ? SDL_GetGamepadName(gamepad) : NULL;
+    return name && (SDL_strcasestr(name,"guitar")!=NULL);
+}
 static int guitar_dpad_strum(void) {
     static int on=-1;
     if (on<0) { const char *t=getenv("SF_GUITAR_DPAD_STRUM"); on=t && *t=='1'; }
@@ -596,10 +701,11 @@ static void guitar_sample(PadData *d) {
     sample(d);
     uint8_t strum=0x80;
     if (d->left_y<0x40) strum=0x00; else if (d->left_y>0xc0) strum=0xff;
-    if (guitar_dpad_strum()) {
+    if (guitar_dpad_strum() || gamepad_is_guitar()) {
         if (d->buttons & BTN_UP) strum=0x00; else if (d->buttons & BTN_DOWN) strum=0xff;
         d->buttons&=~(uint32_t)(BTN_UP|BTN_DOWN);
     }
+    receiver_sample(d,&strum);
     d->left_x=0x80; d->left_y=strum;
     d->l2=d->r2=0; d->buttons&=~(uint32_t)(BTN_L2|BTN_R2|BTN_TOUCHPAD);
     d->touch_count=0;
@@ -640,11 +746,19 @@ static ABI int32_t pad_open_ext(int32_t user, int32_t type, int32_t index, const
     return GUITAR_HANDLE;
 }
 /* Reports to the receiver: 30 02 08 <n> ... and 30 01 08 <n> ... (9 bytes), the game's keep-alive
- * and player light. Nothing to forward until a real receiver is driven. */
+ * and player light. A PS4 receiver gets them (the keep-alive it needs). */
 static ABI int32_t pad_output_report(int32_t handle, int32_t report, const uint8_t *data, int32_t size) {
     if (handle!=GUITAR_HANDLE || !guitar_opened) return ERR_INVALID_HANDLE;
     if (!data || size<1) return ERR_INVALID_ARG;
-    (void)report; return 0;
+    (void)report;
+    /* The PS4 receiver takes the game's reports as they are (the report number leads the data). */
+    pthread_mutex_lock(&lock);
+    if (receiver.device && receiver.kind==GHL_PS4 && size<=64) {
+        if (SDL_hid_write(receiver.device,data,(size_t)size)<0) receiver_close("stopped answering");
+        else receiver.next_poke=now_us()+4000000;
+    }
+    pthread_mutex_unlock(&lock);
+    return 0;
 }
 /* Buffered read: the port samples once per call, so one entry is returned. */
 static ABI int32_t pad_read(int32_t handle, PadData *data, int32_t count) {

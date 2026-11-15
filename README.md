@@ -53,7 +53,8 @@ Tested on Windows 11 with a Vulkan 1.3 GPU (GeForce RTX 5060 Ti), game version 0
 
 - **Guitar Hero TV**: the servers closed in 2018. Sockets work; HTTP requests are not sent yet, so GHTV reports
   that it cannot connect.
-- A real Guitar Hero Live guitar and receiver are not read yet: the guitar is the keyboard or a gamepad.
+- A real guitar is read from the PS4 or PS3 / Wii U receiver over USB (below), but this has not been tried
+  with real hardware yet: the report layout and keep-alive are the documented ones.
 - Only the tutorial has been played so far; whole songs, scoring and audio sync are not verified.
 - On the first screen ("Connect your guitar controller") the shadow layer the game draws under each card and
   caption shows as a grey, offset copy. It is on that screen only and does not affect play.
@@ -84,6 +85,14 @@ Saves and the shader cache are in the `user` folder next to the port.
 | Insert | the port's menu |
 
 On a gamepad: Cross, Circle, Triangle are the black frets, Square, L1, R1 the white ones, the left stick strums.
+
+### A real guitar
+
+Plug in the Guitar Hero Live receiver of a **PS4** (USB id 1430:07BB) or **PS3 / Wii U** (12BA:074B) guitar, before or
+while the game runs: the port reads it directly and sends it the keep-alive it needs. The **Xbox 360** guitar is an
+ordinary controller to Windows and plays through the gamepad mapping, its strum bar as the d-pad. The Xbox One
+receiver needs a driver of its own and is not supported. `SF_GUITAR_TRACE=1` prints the receiver's reports to the
+log, `SF_GUITAR_HID=0` leaves the receiver alone.
 
 ## Building from source
 
