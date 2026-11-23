@@ -1,0 +1,4 @@
+Recomp Achievements SDK (sdk/ of https://github.com/elripalda/RecompAchievements, commit faf094acdf1efb57d8db7c8187b4b47aa1501805):
+rl_achievements.c and its header, with rcheevos (MIT) and cJSON (MIT) under third_party/.
+Recomp Achievements License 1.0 (LICENSE): free for any game. Six Fret reports the trophies the game
+unlocks to RecompLauncher through it (src/runtime_achievements.c).

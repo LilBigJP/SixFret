@@ -216,12 +216,22 @@ if (WIN32 OR APPLE)
     add_library(atrac9 STATIC ${SF_ATRAC9})
     target_compile_options(atrac9 PRIVATE -w)
     set_target_properties(atrac9 PROPERTIES C_STANDARD 99 INTERPROCEDURAL_OPTIMIZATION OFF)
+    # Recomp Achievements (src/runtime_achievements.c): the SDK with rcheevos and cJSON.
+    set(RL_ACH ../third_party/rl_achievements)
+    file(GLOB RL_ACH_SRC CONFIGURE_DEPENDS ${RL_ACH}/src/*.c ${RL_ACH}/third_party/cjson/cJSON.c
+        ${RL_ACH}/third_party/rcheevos/src/runtime/*.c ${RL_ACH}/third_party/rcheevos/src/util/*.c)
+    add_library(rl_achievements STATIC ${RL_ACH_SRC})
+    target_include_directories(rl_achievements PUBLIC ${RL_ACH}/include
+        PRIVATE ${RL_ACH}/third_party/rcheevos/include ${RL_ACH}/third_party/rcheevos/src ${RL_ACH}/third_party/cjson)
+    target_compile_definitions(rl_achievements PRIVATE RC_DISABLE_LUA)
+    target_compile_options(rl_achievements PRIVATE -w)
+    set_target_properties(rl_achievements PROPERTIES C_STANDARD 99 INTERPROCEDURAL_OPTIMIZATION OFF)
     add_executable(sixfret ../src/probe.c ${SF_RUNTIME} ${SF_COMPAT} ../src/cpu_check.c ../src/vulkan_smoke.c
         ../src/isa_rewrite.c ../src/isa_emulate.c)
     set_target_properties(sixfret PROPERTIES C_STANDARD 11 C_EXTENSIONS OFF)
     target_compile_options(sixfret PRIVATE $<$<COMPILE_LANGUAGE:C>:-Wall -Wextra -Werror>)
     target_include_directories(sixfret PRIVATE .. ../src)
-    target_link_libraries(sixfret PRIVATE mtgpu atrac9 PkgConfig::FREETYPE ${SF_COMPAT_LIBS} -pthread)
+    target_link_libraries(sixfret PRIVATE mtgpu atrac9 rl_achievements PkgConfig::FREETYPE ${SF_COMPAT_LIBS} -pthread)
     if (WIN32)
         target_sources(sixfret PRIVATE ../packaging/windows/sixfret.rc)
         target_link_libraries(sixfret PRIVATE onecore ws2_32)

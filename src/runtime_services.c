@@ -701,57 +701,57 @@ static char trophy_details[TROPHY_MAX][160];
  * Achievements page has the same list (scripts/game_trophies.py); tools/gen_trophies.py writes
  * both from tools/trophies.txt. */
 #define GAME_TROPHIES 50
-static const char *const game_trophies[GAME_TROPHIES][2]={
-    {"Platinum Trophy","Collect all Guitar Hero Live trophies."}, /* 0: Platinum */
-    {"Triple Down","Complete 3 songs in Quickplay."}, /* 1: Bronze */
-    {"Posi","Finish every song of a single set with a positive crowd in GH Live."}, /* 2: Bronze */
-    {"Encore...","Complete a set in GH Live."}, /* 3: Bronze */
-    {"Nose To The Grind Stone","Play GHTV for 10 hours."}, /* 4: Bronze */
-    {"Pointdexter","Score 100,000,000 points in GHTV."}, /* 5: Gold */
-    {"OHHHH, Pretty","Acquire a Player Card in GHTV."}, /* 6: Bronze */
-    {"Partial Universe","Get 1,000 stars in GHTV by playing songs."}, /* 7: Bronze */
-    {"Replay King","Score 20,000,000 points in Quickplay."}, /* 8: Bronze */
-    {"Credit Is Due","Watch the credits. Twice. To completion."}, /* 9: Bronze */
-    {"The Stranger","Play any On Demand song in GHTV with Lefty Flip turned on and get 3 Stars."}, /* 10: Bronze */
-    {"The Right Combination","Get a Full Combo in a song in GHTV."}, /* 11: Bronze */
-    {"Not Bad","Get 100% in two songs in Quickplay on Regular difficulty."}, /* 12: Bronze */
-    {"Toppest Of Top Drawers","Get to Level 20 in GHTV."}, /* 13: Bronze */
-    {"Centurion","Use 100 Plays in GHTV."}, /* 14: Bronze */
-    {"Do It You Won't Do It","Switch the crowd from negative to positive in the last ten seconds of a song in GH Live."}, /* 15: Bronze */
-    {"Whoa!","Finish every song in Quickplay or GH Live on any difficulty with 5 stars."}, /* 16: Gold */
-    {"Rising Star","Get 150 stars in GHTV by playing songs."}, /* 17: Bronze */
-    {"All The Notes","Hit each type of note in a single song in GHTV."}, /* 18: Bronze */
-    {"Session Musician","Play with 8 different bands in GH Live."}, /* 19: Bronze */
-    {"Ooooh, You Fancy","Get 100% in 4 songs on Expert difficulty in GH Live."}, /* 20: Silver */
-    {"Touch Of Style","Acquire 4 Player Cards in GHTV."}, /* 21: Bronze */
-    {"Animal Magnetism","Log in to GHTV 5 days in a row."}, /* 22: Bronze */
-    {"Excellent Constitution","Finish in the top 5 of 18 consecutive On Demand songs in GHTV."}, /* 23: Bronze */
-    {"Let's Do This!","Complete the GH Live tutorial."}, /* 24: Bronze */
-    {"Just A Bit","Score over 30,000 points in 50 songs in GHTV."}, /* 25: Bronze */
-    {"Loitering","Connect to GHTV 10 days in a row."}, /* 26: Bronze */
-    {"Power Crazy!","Use a Hero Power 6 times during a song in GHTV."}, /* 27: Silver */
-    {"Hero Power-ful","Use Hero Powers 1,000 times in GHTV."}, /* 28: Bronze */
-    {"Meet The Bands!","Unlock and watch all of the band profile videos in both festival galleries in GH Live."}, /* 29: Bronze */
-    {"Bling Of The Road","Equip 5 different Highways in GHTV."}, /* 30: Bronze */
-    {"Rock Expert","Get 50 stars in GHTV by playing songs on Expert difficulty."}, /* 31: Bronze */
-    {"Specialist Shredder","Fully upgrade a skill on your guitar in GHTV."}, /* 32: Silver */
-    {"Power Hour","Play GHTV for 60 minutes without changing the channel."}, /* 33: Bronze */
-    {"Nailed It","Score over 500,000 points in a song in GHTV."}, /* 34: Bronze */
-    {"Stars Upon Stars Upon Stars","Get 5 Stars in 50 songs in GHTV on any difficulty."}, /* 35: Bronze */
-    {"3rd Place Ain't Bad","Place 3rd or above 30 times in the free GHTV channels."}, /* 36: Bronze */
-    {"No Need For A Hero","Score 420,000 points or more in a song without using a Hero Power in GHTV."}, /* 37: Silver */
-    {"Consistent","Get a total of 25 Stars in 5 consecutive songs on free GHTV channels."}, /* 38: Bronze */
-    {"I Have The Power","Use 5 unique Hero Powers in GHTV."}, /* 39: Bronze */
-    {"Really, Really Good","Give an \"Awesome\" performance in all sets in GH Live on Regular difficulty or harder."}, /* 40: Silver */
-    {"The Great Compromise","Get a 50 note streak 50 times while playing GHTV."}, /* 41: Bronze */
-    {"You Rocked The Block","Complete all of the Rock the Block stages in GH Live on any difficulty."}, /* 42: Silver */
-    {"Sound Dialed In","Complete all of the SoundDial stages in GH Live on any difficulty."}, /* 43: Silver */
-    {"Now With More Awesome","Complete 7 sets in GH Live, each with an overall \"Awesome\" rating, on any difficulty."}, /* 44: Silver */
-    {"Piece Of Cake","Complete all of GH Live on any difficulty."}, /* 45: Bronze */
-    {"Day","Play GHTV for 24 hours."}, /* 46: Bronze */
-    {"All The Points!","Score 50,000,000 points in GHTV."}, /* 47: Bronze */
-    {"Strumillionaire","Strum 1,000,000 times in GHTV."}, /* 48: Silver */
-    {"Amazing!","Earn a 1,000 note streak in GHTV."}, /* 49: Silver */
+static const char *const game_trophies[GAME_TROPHIES][3]={
+    {"Platinum Trophy","Collect all Guitar Hero Live trophies.","Platinum"}, /* 0 */
+    {"Triple Down","Complete 3 songs in Quickplay.","Bronze"}, /* 1 */
+    {"Posi","Finish every song of a single set with a positive crowd in GH Live.","Bronze"}, /* 2 */
+    {"Encore...","Complete a set in GH Live.","Bronze"}, /* 3 */
+    {"Nose To The Grind Stone","Play GHTV for 10 hours.","Bronze"}, /* 4 */
+    {"Pointdexter","Score 100,000,000 points in GHTV.","Gold"}, /* 5 */
+    {"OHHHH, Pretty","Acquire a Player Card in GHTV.","Bronze"}, /* 6 */
+    {"Partial Universe","Get 1,000 stars in GHTV by playing songs.","Bronze"}, /* 7 */
+    {"Replay King","Score 20,000,000 points in Quickplay.","Bronze"}, /* 8 */
+    {"Credit Is Due","Watch the credits. Twice. To completion.","Bronze"}, /* 9 */
+    {"The Stranger","Play any On Demand song in GHTV with Lefty Flip turned on and get 3 Stars.","Bronze"}, /* 10 */
+    {"The Right Combination","Get a Full Combo in a song in GHTV.","Bronze"}, /* 11 */
+    {"Not Bad","Get 100% in two songs in Quickplay on Regular difficulty.","Bronze"}, /* 12 */
+    {"Toppest Of Top Drawers","Get to Level 20 in GHTV.","Bronze"}, /* 13 */
+    {"Centurion","Use 100 Plays in GHTV.","Bronze"}, /* 14 */
+    {"Do It You Won't Do It","Switch the crowd from negative to positive in the last ten seconds of a song in GH Live.","Bronze"}, /* 15 */
+    {"Whoa!","Finish every song in Quickplay or GH Live on any difficulty with 5 stars.","Gold"}, /* 16 */
+    {"Rising Star","Get 150 stars in GHTV by playing songs.","Bronze"}, /* 17 */
+    {"All The Notes","Hit each type of note in a single song in GHTV.","Bronze"}, /* 18 */
+    {"Session Musician","Play with 8 different bands in GH Live.","Bronze"}, /* 19 */
+    {"Ooooh, You Fancy","Get 100% in 4 songs on Expert difficulty in GH Live.","Silver"}, /* 20 */
+    {"Touch Of Style","Acquire 4 Player Cards in GHTV.","Bronze"}, /* 21 */
+    {"Animal Magnetism","Log in to GHTV 5 days in a row.","Bronze"}, /* 22 */
+    {"Excellent Constitution","Finish in the top 5 of 18 consecutive On Demand songs in GHTV.","Bronze"}, /* 23 */
+    {"Let's Do This!","Complete the GH Live tutorial.","Bronze"}, /* 24 */
+    {"Just A Bit","Score over 30,000 points in 50 songs in GHTV.","Bronze"}, /* 25 */
+    {"Loitering","Connect to GHTV 10 days in a row.","Bronze"}, /* 26 */
+    {"Power Crazy!","Use a Hero Power 6 times during a song in GHTV.","Silver"}, /* 27 */
+    {"Hero Power-ful","Use Hero Powers 1,000 times in GHTV.","Bronze"}, /* 28 */
+    {"Meet The Bands!","Unlock and watch all of the band profile videos in both festival galleries in GH Live.","Bronze"}, /* 29 */
+    {"Bling Of The Road","Equip 5 different Highways in GHTV.","Bronze"}, /* 30 */
+    {"Rock Expert","Get 50 stars in GHTV by playing songs on Expert difficulty.","Bronze"}, /* 31 */
+    {"Specialist Shredder","Fully upgrade a skill on your guitar in GHTV.","Silver"}, /* 32 */
+    {"Power Hour","Play GHTV for 60 minutes without changing the channel.","Bronze"}, /* 33 */
+    {"Nailed It","Score over 500,000 points in a song in GHTV.","Bronze"}, /* 34 */
+    {"Stars Upon Stars Upon Stars","Get 5 Stars in 50 songs in GHTV on any difficulty.","Bronze"}, /* 35 */
+    {"3rd Place Ain't Bad","Place 3rd or above 30 times in the free GHTV channels.","Bronze"}, /* 36 */
+    {"No Need For A Hero","Score 420,000 points or more in a song without using a Hero Power in GHTV.","Silver"}, /* 37 */
+    {"Consistent","Get a total of 25 Stars in 5 consecutive songs on free GHTV channels.","Bronze"}, /* 38 */
+    {"I Have The Power","Use 5 unique Hero Powers in GHTV.","Bronze"}, /* 39 */
+    {"Really, Really Good","Give an \"Awesome\" performance in all sets in GH Live on Regular difficulty or harder.","Silver"}, /* 40 */
+    {"The Great Compromise","Get a 50 note streak 50 times while playing GHTV.","Bronze"}, /* 41 */
+    {"You Rocked The Block","Complete all of the Rock the Block stages in GH Live on any difficulty.","Silver"}, /* 42 */
+    {"Sound Dialed In","Complete all of the SoundDial stages in GH Live on any difficulty.","Silver"}, /* 43 */
+    {"Now With More Awesome","Complete 7 sets in GH Live, each with an overall \"Awesome\" rating, on any difficulty.","Silver"}, /* 44 */
+    {"Piece Of Cake","Complete all of GH Live on any difficulty.","Bronze"}, /* 45 */
+    {"Day","Play GHTV for 24 hours.","Bronze"}, /* 46 */
+    {"All The Points!","Score 50,000,000 points in GHTV.","Bronze"}, /* 47 */
+    {"Strumillionaire","Strum 1,000,000 times in GHTV.","Silver"}, /* 48 */
+    {"Amazing!","Earn a 1,000 note streak in GHTV.","Silver"}, /* 49 */
 };
 static FILE *trophy_open_text(char *path,size_t size) {
     static const char *const files[2]={"trophy_texts.txt","trophy_names.txt"};
@@ -871,6 +871,13 @@ static void trophy_load_once(void) {
         trophy_label[6][0] ? trophy_label[6] : 0, trophy_label[7][0] ? trophy_label[7] : 0,
         trophy_label[8][0] ? trophy_label[8] : 0};
     mtgpu_trophy_setup(&labels,infos,(int)total,(const volatile uint32_t *)trophy_flags);
+    /* RecompLauncher (Recomp Achievements): the list, the trophies already unlocked, then the connection. */
+    for (uint32_t i=0;i<total;i++) {
+        int id=trophy_ids[i];
+        runtime_achievements_define(id,trophy_names[id],trophy_details[id],id<GAME_TROPHIES ? game_trophies[id][2] : NULL,
+                                    (int)(trophy_flags[id/32]>>(id%32)&1u));
+    }
+    runtime_achievements_start();
 }
 static ABI int32_t trophy_context(int32_t *ctx,int32_t user,uint32_t label,uint64_t options) {
     (void)user; (void)label; (void)options;
@@ -893,6 +900,8 @@ static void trophy_notify(int32_t id) {
     snprintf(detail,sizeof(detail),"%s",trophy_details[id]);
     int has_icon=trophy_icon(id,&png,&png_size);
     pthread_mutex_unlock(&lock);
+    /* RecompLauncher shows its own notice when it asks (Recomp Achievements). */
+    if (runtime_achievements_quiet_toasts()) return;
     mtgpu_toast_trophy(notice,detail,has_icon ? png : 0,has_icon ? png_size : 0);
 }
 /* On a PlayStation the system grants the platinum (id 0) with the last trophy: 1 when every other
@@ -932,10 +941,12 @@ static ABI int32_t trophy_unlock(int32_t ctx,int32_t handle,int32_t id,int32_t *
     pthread_mutex_unlock(&lock);
     if (already) return TROPHY_ALREADY_UNLOCKED;
     printf("Runtime: trophy %d unlocked\n",id);
+    runtime_achievements_unlock(id);
     trophy_notify(id);
     if (platinum_now) {
         if (platinum) *platinum=0;
         printf("Runtime: trophy 0 (platinum) unlocked\n");
+        runtime_achievements_unlock(0);
         trophy_notify(0);
     }
     return 0;

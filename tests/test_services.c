@@ -22,6 +22,13 @@ void mtgpu_toast_trophy(const char *title, const char *detail, const unsigned ch
 }
 static int achievements=1;
 int mtgpu_achievements_enabled(void) { return achievements; }
+/* Recomp Achievements: not connected in the test. */
+void runtime_achievements_define(int id, const char *name, const char *detail, const char *grade, int earlier) {
+    (void)id; (void)name; (void)detail; (void)grade; (void)earlier;
+}
+void runtime_achievements_start(void) {}
+void runtime_achievements_unlock(int id) { (void)id; }
+int runtime_achievements_quiet_toasts(void) { return 0; }
 static const char *user_dir="services-test-no-user-dir";
 const char *runtime_file_user_dir(void) { return user_dir; }
 void mtgpu_trophy_setup(const MtGpuTrophyLabels *labels, const MtGpuTrophyInfo *items,
@@ -297,16 +304,16 @@ int main(void) {
     assert(trophy_unlock_state(1,1,NULL,&count)==TROPHY_INVALID && trophy_release(0)==TROPHY_INVALID);
     /* Without a text file the notice tells the game's own trophy by its id (it said "Trophy ID 7"). */
     assert(trophy_unlock(1,1,7,NULL)==0);
-    assert(!strcmp(last_trophy,"Amateur Photographer") &&
-           !strcmp(last_trophy_detail,"Collect first set of data at a photo location in story mode."));
+    assert(!strcmp(last_trophy,"Partial Universe") &&
+           !strcmp(last_trophy_detail,"Get 1,000 stars in GHTV by playing songs."));
     assert(trophy_unlock(1,1,7,NULL)==TROPHY_ALREADY_UNLOCKED);
-    assert(trophy_unlock(1,1,1,NULL)==0 && !strcmp(last_trophy,"The Scars of Disaster"));
-    assert(!strcmp(trophy_names[44],"Crazy for the game") && !strcmp(trophy_names[0],"the game"));
+    assert(trophy_unlock(1,1,1,NULL)==0 && !strcmp(last_trophy,"Triple Down"));
+    assert(!strcmp(trophy_names[44],"Now With More Awesome") && !strcmp(trophy_names[0],"Platinum Trophy"));
     /* Achievements off: the game is told the trophy is unlocked, but it is neither kept nor shown. */
     achievements=0; last_trophy[0]=0;
     assert(trophy_unlock(1,1,20,NULL)==0 && !last_trophy[0] && !(trophy_flags[0]&1u<<20));
     achievements=1;
-    assert(trophy_unlock(1,1,20,NULL)==0 && !strcmp(last_trophy,"100% Destruction"));
+    assert(trophy_unlock(1,1,20,NULL)==0 && !strcmp(last_trophy,"Ooooh, You Fancy"));
 
     /* The unlocks are kept in the user folder (the one --user names, with the saves) and a new
      * session starts with them: on the Mac the app's folder was not the working directory's "user",

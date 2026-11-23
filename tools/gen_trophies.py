@@ -29,8 +29,8 @@ def main():
     def runtime(text):
         start = text.index('#define GAME_TROPHIES')
         end = text.index('};', start) + 2
-        table = (f'#define GAME_TROPHIES {len(rows)}\nstatic const char *const game_trophies[GAME_TROPHIES][2]={{\n'
-                 + ''.join(f'    {{"{c_string(n)}","{c_string(d)}"}}, /* {i}: {g} */\n' for i, (n, d, g) in enumerate(rows))
+        table = (f'#define GAME_TROPHIES {len(rows)}\nstatic const char *const game_trophies[GAME_TROPHIES][3]={{\n'
+                 + ''.join(f'    {{"{c_string(n)}","{c_string(d)}","{g}"}}, /* {i} */\n' for i, (n, d, g) in enumerate(rows))
                  + '};')
         return text[:start] + table + text[end:]
 

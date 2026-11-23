@@ -126,6 +126,12 @@ int runtime_pad_describe(void);
 uintptr_t runtime_rtc_resolve(const char *name);
 const char *runtime_file_user_dir(void);
 void runtime_savedata_configure(const char *title);
+/* Recomp Achievements (runtime_achievements.c): the game's trophies for RecompLauncher. */
+void runtime_achievements_define(int id, const char *name, const char *detail, const char *grade, int earlier);
+void runtime_achievements_start(void);
+void runtime_achievements_unlock(int id);
+void runtime_achievements_save_loaded(void);
+int runtime_achievements_quiet_toasts(void);
 uintptr_t runtime_savedata_resolve(const char *name);
 void runtime_savedata_report(void);
 /* OrbisSaveDataParam (1328 bytes) of a save directory of the current title. */

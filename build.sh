@@ -136,16 +136,28 @@ if [[ ! -f out/libatrac9.a || -n $(find third_party/LibAtrac9/C/src -newer out/l
     for source in "${atrac9[@]}"; do "$CC" -std=c99 -O2 -g -w -c "$source" -o "out/atrac9/$(basename "${source%.c}").o"; done
     ar rcs out/libatrac9.a out/atrac9/*.o
 fi
+# Recomp Achievements (src/runtime_achievements.c): its SDK with rcheevos and cJSON, the same way.
+rl=third_party/rl_achievements
+if [[ ! -f out/librl_achievements.a || -n $(find "$rl" -newer out/librl_achievements.a -name '*.c') ]]; then
+    rm -rf out/rl_ach && mkdir -p out/rl_ach
+    for source in "$rl"/src/*.c "$rl"/third_party/cjson/cJSON.c "$rl"/third_party/rcheevos/src/runtime/*.c \
+                  "$rl"/third_party/rcheevos/src/util/*.c; do
+        "$CC" -std=c99 -O2 -g -w -DRC_DISABLE_LUA -I"$rl/include" -I"$rl/third_party/rcheevos/include" \
+            -I"$rl/third_party/rcheevos/src" -I"$rl/third_party/cjson" -c "$source" \
+            -o "out/rl_ach/$(basename "${source%.c}").o"
+    done
+    ar rcs out/librl_achievements.a out/rl_ach/*.o
+fi
 # isa_emulate runs inside guest code: no XMM/YMM.
 "$CC" -std=c11 -O2 -g -Wall -Wextra -Werror -mgeneral-regs-only -c src/isa_emulate.c -o out/isa_emulate.o
-"$CC" -std=c11 -O2 -g -Wall -Wextra -Werror -pthread -no-pie "${includes[@]}" -I. -Isrc src/probe.c "${runtime[@]}" src/cpu_check.c src/vulkan_smoke.c out/isa_emulate.o src/isa_rewrite.c out/libatrac9.a -lm "${gpu[@]}" "${libraries[@]}" -o out/sixfret
+"$CC" -std=c11 -O2 -g -Wall -Wextra -Werror -pthread -no-pie "${includes[@]}" -I. -Isrc -I"$rl/include" src/probe.c "${runtime[@]}" src/cpu_check.c src/vulkan_smoke.c out/isa_emulate.o src/isa_rewrite.c out/libatrac9.a out/librl_achievements.a -lm "${gpu[@]}" "${libraries[@]}" -o out/sixfret
 echo "Built $PWD/out/sixfret"
 # GPU check for run.sh (live_resolution=auto): links only the Vulkan loader.
 "$CC" -std=c11 -O2 -Wall -Wextra -Werror -Igpu/shadps4 -Isrc tools/gpu_capabilities.c "${libraries[@]}" -o out/sixfret-gpu-capabilities
 if [[ ${1:-} == --test ]]; then
     "$CC" -std=c11 -O2 -g -Wall -Wextra -Werror -pthread "${includes[@]}" -I. -Isrc tests/test_pad.c "${libraries[@]}" -o out/pad-test
     out/pad-test
-    "$CC" -std=c11 -O2 -g -Wall -Wextra -Werror -pthread "${includes[@]}" -I. -Isrc tests/test_runtime.c "${runtime[@]}" out/libatrac9.a -lm "${gpu[@]}" "${libraries[@]}" -o out/runtime-test
+    "$CC" -std=c11 -O2 -g -Wall -Wextra -Werror -pthread "${includes[@]}" -I. -Isrc -I"$rl/include" tests/test_runtime.c "${runtime[@]}" out/libatrac9.a out/librl_achievements.a -lm "${gpu[@]}" "${libraries[@]}" -o out/runtime-test
     out/runtime-test
     "$CC" -std=c11 -O2 -g -Wall -Wextra -Werror -pthread "${includes[@]}" -I. -Isrc tests/test_audio.c "${libraries[@]}" -o out/audio-test
     out/audio-test

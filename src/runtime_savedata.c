@@ -166,6 +166,7 @@ static int32_t mount(int32_t user, const char *title, const DirName *dir, uint32
     runtime_file_mount(result->point.data,host);
     ++mounts_done;
     pthread_mutex_unlock(&lock);
+    if (exists) runtime_achievements_save_loaded(); /* Recomp Achievements: unlocks right after a load are Casual */
     printf("Runtime: save data '%s' mounted at %s (%s%s)\n",dir->data,result->point.data,
            exists ? "existing" : "created",(mode & MODE_RDONLY) ? ", read-only" : "");
     return 0;
