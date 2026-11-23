@@ -205,7 +205,7 @@ void Load() {
         {"SF_MOUSE_PROMPT_DISTANCE", "mouse_prompt_distance"}, {"SF_MOUSE_LOCK", "mouse_lock"},
         {"SF_MOUSE_AIM_STYLE", "mouse_aim_style"}, {"SF_MOUSE_AIM_SENSITIVITY", "mouse_aim_sensitivity"},
         {"SF_MONITOR", "monitor"}, {"SF_HDR", "hdr"},
-        {"SF_GLYPH_STYLE", "glyph_style"},
+        {"SF_GLYPH_STYLE", "glyph_style"},          {"SF_DISPLAY_MODE", "display_mode"},
     };
     for (const auto& [env, key] : env_keys) {
         if (const char* value = std::getenv(env); value && value[0]) {

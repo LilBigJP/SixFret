@@ -125,10 +125,15 @@ def prepare_only(env):
         fail(f'No eboot.bin in {game} (set SF_GAME_DIR).')
     steps = (('prepare.py', 'Reading the game'), ('link_libc.py', 'Linking its C library'),
              ('link_modules.py', 'Linking its modules'))
+    # SF_PROGRESS_RANGE "0.95 1": the share of a longer setup these steps fill (the launcher unpacked a PKG first).
+    try:
+        low, high = (float(n) for n in env.get('SF_PROGRESS_RANGE', '0 1').split())
+    except ValueError:
+        low, high = 0.0, 1.0
     for number, (script, label) in enumerate(steps):
-        print(f'progress {number / len(steps):.2f} {label}', flush=True)
+        print(f'progress {low + (high - low) * number / len(steps):.2f} {label}', flush=True)
         run_script(script, game, '--out', out)
-    print('progress 1.00 The game image is ready', flush=True)
+    print(f'progress {high:.2f} The game image is ready', flush=True)
     return 0
 
 

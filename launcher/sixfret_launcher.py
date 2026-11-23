@@ -7,6 +7,11 @@
     python launcher/sixfret_launcher.py --play --game <folder>   the same, with this Guitar Hero Live folder
     python launcher/sixfret_launcher.py --prepare [--game <folder>]   only the game image steps, with progress lines
 
+--game also takes a fake-signed PKG of the game (unpacked once into <data>/game/<title id>), and
+--update <PKG> its update, unpacked over it. --game=<path> and --update=<path> work too. Exit codes
+of --play and --prepare (RecompLauncher shows the reason): 21 no game, 22 another game, 23 an
+incomplete dump, 24 a PKG that cannot be unpacked.
+
 Frozen into SixFret.exe (packaging/windows/package.sh), the same program also runs run.py
 (--run) and the preparation scripts (--script <path> ...), so players need no Python.
 Launcher settings are kept in settings.json, the game's display and input settings in
@@ -48,18 +53,20 @@ SETTINGS = DATA / 'settings.json'
 INI = DATA / 'sixfret.ini'
 LOG = DATA / 'user' / 'last_run.log'
 # This build of the port. A GitHub release is an update when its tag (v0.2.0) holds a higher version.
-VERSION = '0.1.1'
+VERSION = '0.1.2'
 # The GitHub repository (owner/name, public) whose releases are this port's updates; empty: no update check.
-GITHUB_REPO = ''  # owner/name once releases are published
+GITHUB_REPO = 'LilBigJP/SixFret'
 UPDATE_DIR = Path(tempfile.gettempdir()) / 'sixfret-update'
 # The page and window an update's restart opens again (written just before it, read once).
 RESUME = DATA / 'resume.json'
 # macOS: the apps an update replaces, side by side in the installation folder (Play SixFret.app only when
 # the player kept it there).
 MAC_APPS = ('SixFret.app', 'Play SixFret.app')
-# The release file of this system: the Windows zip, the macOS zip (SixFret.app), the Linux AppImage (Steam
-# Deck). By name: a release holds both zips.
-PACKAGE_SUFFIX = {'win32': '-windows.zip', 'darwin': '-macos.zip'}.get(sys.platform, '.appimage')
+# The release file of this system, by the end of its name: the Windows zip, the macOS zip (SixFret.app),
+# the Linux AppImage (Steam Deck). Releases from 0.1.2 name the processor too (sixfret-0.1.2-windows-x64.zip);
+# the older names still match.
+PACKAGE_SUFFIX = {'win32': ('-windows-x64.zip', '-windows.zip'),
+                  'darwin': ('-macos-x64.zip', '-macos.zip')}.get(sys.platform, ('-linux-x86_64.appimage', '.appimage'))
 # Never copied over an installation by an update (the package does not hold them either).
 USER_FILES = ('user', 'out', 'cache', 'mods', 'sixfret.ini', 'settings.json', 'mods.json', 'mods_presets.json',
               'patches.json', 'last_run.log', 'fsr4_shaders', 'nvngx_dlss*.dll')
@@ -111,20 +118,31 @@ def write_ini(updates):
     write_keys(INI, updates)
 
 
-def game_problem(folder):
-    """Why a folder is not a usable Guitar Hero Live dump, or None when it is."""
+# Exit codes of --play and --prepare when the game cannot start (recomplauncher.json explains them).
+EXIT_NO_GAME, EXIT_WRONG_GAME, EXIT_INCOMPLETE, EXIT_BAD_PKG = 21, 22, 23, 24
+
+
+def check_game(folder):
+    """(exit code, why) when a folder is not a usable Guitar Hero Live dump, (0, None) when it is."""
     if not folder:
-        return 'No game folder chosen yet.'
+        return EXIT_NO_GAME, 'No game folder chosen yet.'
     folder = Path(folder)
     if not (folder / 'eboot.bin').is_file():
-        return 'This folder has no eboot.bin: choose the folder of your dump (with eboot.bin, sce_module, sce_sys).'
+        return EXIT_NO_GAME, ('This folder has no eboot.bin: choose the folder of your dump (with eboot.bin, '
+                              'sce_module, sce_sys) or the game\'s PKG.')
     if not (folder / 'sce_module' / 'libc.prx').is_file():
-        return 'sce_module/libc.prx is missing: the dump is incomplete.'
+        return EXIT_INCOMPLETE, 'sce_module/libc.prx is missing: the dump is incomplete.'
     from prepare import read_sfo
     sfo = read_sfo(folder / 'sce_sys' / 'param.sfo') or {}
     if sfo.get('TITLE_ID') not in TITLE_IDS and 'GUITAR HERO LIVE' not in str(sfo.get('TITLE', '')).upper():
-        return f'This is {sfo.get("TITLE", "another game")} ({sfo.get("TITLE_ID", "?")}), not Guitar Hero Live.'
-    return None
+        return EXIT_WRONG_GAME, (f'This is {sfo.get("TITLE", "another game")} ({sfo.get("TITLE_ID", "?")}), '
+                                 'not Guitar Hero Live.')
+    return 0, None
+
+
+def game_problem(folder):
+    """Why a folder is not a usable Guitar Hero Live dump, or None when it is."""
+    return check_game(folder)[1]
 
 
 def game_version(folder):
@@ -157,7 +175,11 @@ def game_environment(values):
     env = {**os.environ, 'SF_GAME_DIR': values['game_dir'], 'SF_LANGUAGE': values['language'],
            'SF_UNLOCK_ADDONS': '1' if values['unlock_addons'] else '0', 'SF_CONFIG': str(INI),
            'SF_DATA_DIR': str(DATA), 'SF_MODS_ENABLED': '1' if values.get('mods_enabled', True) else '0',
-           'PYTHONIOENCODING': 'utf-8'}
+           'PYTHONIOENCODING': 'utf-8', 'SF_VERSION': VERSION}
+    # Play pressed in RecompLauncher's Big Picture mode (a controller, the couch): full screen for this start
+    # only (the runtime reads SF_DISPLAY_MODE over sixfret.ini).
+    if os.environ.get('RECOMPLAUNCHER_MODE') == 'bigpicture' and not os.environ.get('SF_DISPLAY_MODE'):
+        env['SF_DISPLAY_MODE'] = 'fullscreen'
     # The startup options are built-in patches (run.py adds them to the ones SF_PATCHES already names).
     chosen = [n for n in os.environ.get('SF_PATCHES', '').split(';') if n.strip()]
     chosen += [patch for key, patch, _, _ in STARTUP_PATCHES if values.get(key) and patch not in chosen]
@@ -211,38 +233,89 @@ def start_game(values, log_file):
                             stdout=log_file, stderr=subprocess.STDOUT, creationflags=no_window)
 
 
-def game_option(args):
-    """The folder after --game in the command line, or None when the option is not given."""
-    if '--game' not in args:
-        return None
-    index = args.index('--game') + 1
-    return args[index] if index < len(args) else None
+def game_option(args, name='--game'):
+    """The path given with `name` (--game <path> or --game=<path>), or None when the option is not given."""
+    for index, arg in enumerate(args):
+        if arg.startswith(name + '='):
+            return arg[len(name) + 1:] or None
+        if arg == name:
+            return args[index + 1] if index + 1 < len(args) else None
+    return None
 
 
-def prepare_without_window(game_dir=None):
+def is_pkg(path):
+    return bool(path) and str(path).lower().endswith('.pkg') and Path(path).is_file()
+
+
+def game_from_packages(game, update=None, progress=False, report=None):
+    """The game folder of a fake-signed PKG (and its update PKG): unpacked once into <data>/game/<title id>,
+    again only when either package changes. Returns (folder, None) or (None, (exit code, why))."""
+    import pkg_extract
+    try:
+        title = pkg_extract.Pkg(game).title_id
+        folder = DATA / 'game' / title
+        marker = folder / 'sixfret-pkg.json'
+        wanted = {name: [Path(p).name, Path(p).stat().st_size] for name, p in (('game', game), ('update', update)) if p}
+        if load_json(marker, {}) == wanted and (folder / 'eboot.bin').is_file():
+            return folder, None
+        if marker.exists():
+            marker.unlink()
+        report = report or (None if progress else (lambda line: None))
+        pkg_extract.extract(game, folder, 0.0, 0.85 if update else 0.95, 'Unpacking the game', report)
+        if update:
+            pkg_extract.extract(update, folder, 0.85, 0.95, 'Unpacking the update', report)
+        write_json(marker, wanted)
+        return folder, None
+    except (pkg_extract.PkgError, OSError, ValueError) as error:
+        return None, (EXIT_BAD_PKG, f'The PKG could not be unpacked: {error}')
+    except ImportError as error:
+        return None, (EXIT_BAD_PKG, f'Unpacking a PKG needs the cryptography module: {error}')
+
+
+def resolve_game(values, args, progress=False):
+    """The game folder for this start, from --game/--update (a folder or PKGs) or the saved one: (values, None)
+    or (values, (exit code, why)). --game is for this start only: settings.json keeps the player's own choice."""
+    game, update = game_option(args), game_option(args, '--update')
+    if game:
+        values['game_dir'] = game
+    if is_pkg(values['game_dir']):
+        folder, problem = game_from_packages(values['game_dir'], update if is_pkg(update) else None, progress)
+        if problem:
+            return values, problem
+        values['game_dir'] = str(folder)
+    elif update:
+        print('An update PKG is only unpacked with the game\'s PKG; a game folder must have the update in it.',
+              file=sys.stderr)
+    code, problem = check_game(values['game_dir'])
+    if not code:
+        note = version_note(values['game_dir'])
+        if note and 'is empty' in note:
+            code, problem = EXIT_INCOMPLETE, note
+        elif note:
+            print(note, file=sys.stderr)
+    return values, (code, problem) if code else None
+
+
+def prepare_without_window(args=()):
     """The game image steps only (run.py --prepare), for a launcher's setup screen: its progress lines go to
-    this process's output."""
-    values = load_settings()
-    if game_dir:
-        values['game_dir'] = game_dir
-    problem = game_problem(values['game_dir'])
+    this process's output. A PKG is unpacked first (0 to 0.95 of the progress)."""
+    values, problem = resolve_game(load_settings(), list(args), progress=True)
     if problem:
-        print(problem, file=sys.stderr)
-        return 1
+        print(problem[1], file=sys.stderr)
+        return problem[0]
     no_window = subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
-    return subprocess.run([*game_command(), '--prepare'], cwd=PORT, env=game_environment(values),
+    env = game_environment(values)
+    if is_pkg(game_option(list(args))):
+        env['SF_PROGRESS_RANGE'] = '0.95 1'
+    return subprocess.run([*game_command(), '--prepare'], cwd=PORT, env=env,
                           stdin=subprocess.DEVNULL, creationflags=no_window).returncode
 
 
-def play_without_window(game_dir=None):
-    values = load_settings()
-    # --game is for this start only: settings.json keeps the player's own choice.
-    if game_dir:
-        values['game_dir'] = game_dir
-    problem = game_problem(values['game_dir'])
+def play_without_window(args=()):
+    values, problem = resolve_game(load_settings(), list(args))
     if problem:
-        print(problem, file=sys.stderr)
-        return 1
+        print(problem[1], file=sys.stderr)
+        return problem[0]
     LOG.parent.mkdir(parents=True, exist_ok=True)
     with open(LOG, 'wb') as log:
         return start_game(values, log).wait()
@@ -921,6 +994,8 @@ class Launcher:
         folder = ttk.Frame(ready)
         folder.grid(row=ready.next_row + 1, column=0, columnspan=2, sticky='w', pady=(self.px(10), 0))
         ttk.Button(folder, text='Change the game folder…', command=self.choose_game).pack(side='left')
+        self.pkg_button = ttk.Button(folder, text='Install from a PKG…', command=self.install_pkg)
+        self.pkg_button.pack(side='left', padx=(self.px(8), 0))
 
         quick = ttk.Frame(body)
         quick.grid(row=1, column=1, sticky='nwe')
@@ -1608,6 +1683,9 @@ class Launcher:
              'are unlocked. It works offline.')
         text('GHTV streamed its songs from Activision\'s servers, which closed on 1 December 2018. Until the port can '
              'reach a community server, GHTV reports that it cannot connect.')
+        self.section(page, 'A PKG instead of a folder')
+        text('Install from a PKG (Play page) takes the game\'s fake-signed PKG and then its 1.08 update PKG and '
+             'unpacks them once, about 28 GB, into the port\'s game folder; that folder is then the game folder.')
         self.section(page, 'If something is wrong')
         text('A black screen after the start: the dump is incomplete. The video and tracks folders must hold the '
              'game\'s movies and songs, and the dump must be version 01.08 (the Play page says which it is).')
@@ -1692,6 +1770,41 @@ class Launcher:
             self.values['game_dir'] = str(Path(folder))
             save_settings(self.values)
             self.refresh_game()
+
+    def install_pkg(self):
+        """The game from its fake-signed PKG (and the update PKG): unpacked once into the data folder, which
+        then becomes the game folder. About 28 GB; the progress shows under the Play button."""
+        from tkinter import filedialog, messagebox
+        types = [('PS4 package', '*.pkg'), ('All files', '*.*')]
+        game = filedialog.askopenfilename(title='The Guitar Hero Live game PKG (CUSA02410)', filetypes=types)
+        if not game:
+            return
+        update = None
+        if messagebox.askyesno('Six Fret', 'Do you have the version 1.08 update PKG as well? It is unpacked over '
+                               'the game (the port is tested with 1.08).'):
+            update = filedialog.askopenfilename(title='The Guitar Hero Live update PKG (version 1.08)',
+                                                filetypes=types) or None
+        self.pkg_button.state(['disabled'])
+
+        def report(line):
+            words = line.split(' ', 2)
+            text = words[2] if len(words) == 3 else line
+            self.ui_calls.put(lambda: self.summary.configure(text=text, fg=MUTED))
+
+        def work():
+            folder, problem = game_from_packages(game, update, report=report)
+
+            def done():
+                self.pkg_button.state(['!disabled'])
+                if problem:
+                    messagebox.showerror('Six Fret', problem[1])
+                    return
+                self.values['game_dir'] = str(folder)
+                save_settings(self.values)
+                self.summary.configure(text=f'Unpacked into {folder}', fg=ACCENT_HI)
+                self.refresh_game()
+            self.ui_calls.put(done)
+        threading.Thread(target=work, daemon=True).start()
 
     def refresh_game(self):
         folder = self.values['game_dir']
@@ -1920,9 +2033,9 @@ def main():
         runpy.run_path(str(PORT / 'run.py'), run_name='__main__')
         return 0
     if args and args[0] == '--play':
-        return play_without_window(game_option(args[1:]))
+        return play_without_window(args[1:])
     if args and args[0] == '--prepare':
-        return prepare_without_window(game_option(args[1:]))
+        return prepare_without_window(args[1:])
     if sys.platform == 'win32':
         try:
             import ctypes
