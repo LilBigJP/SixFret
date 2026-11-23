@@ -3,8 +3,10 @@
 **Six Fret** is an unofficial native PC port of **Guitar Hero Live** (PlayStation 4, Activision / FreeStyleGames,
 2015) for Windows 10 and 11. It is a personal project, for playing a copy of the game you own.
 
-> **No game files are included.** You need a dump of your own PS4 copy: the folder with `eboot.bin`, `sce_module`
-> and `sce_sys` (tested: CUSA02410, version 01.08). This project is not affiliated with or endorsed by Activision,
+<a href="https://recomplauncher.com"><picture><source media="(prefers-color-scheme: dark)" srcset="https://recomplauncher.com/assets/press/launcher/badge-light.svg"><img alt="Get it on RecompLauncher" src="https://recomplauncher.com/assets/press/launcher/badge-dark.svg" height="48"></picture></a>
+
+> **No game files are included.** You need your own PS4 copy: the dumped folder with `eboot.bin`, `sce_module`
+> and `sce_sys`, or the game's fake-signed PKG with its update PKG (tested: CUSA02410, version 01.08). This project is not affiliated with or endorsed by Activision,
 > FreeStyleGames or Sony Interactive Entertainment. Guitar Hero is a trademark of Activision Publishing, Inc.
 
 ## How it works
@@ -40,7 +42,12 @@ The port is built on [Minus Two](https://github.com/gminustwo/minustwo), an earl
   for it; new threads start a moment after they are created (`src/runtime_thread.c`).
 - A silent microphone port (the game otherwise retries opening one without a pause), `sku.prx` linked into the
   image, and offline answers for the PSN, dialog and store functions the game imports (`src/runtime_ghl.c`).
-- **Achievements**: the game's 50 trophies with their names and descriptions, in the launcher and in-game.
+- **Achievements**: the game's 50 trophies with their names and descriptions, in the launcher and in-game, and
+  in [RecompLauncher](https://recomplauncher.com) through
+  [Recomp Achievements](https://github.com/elripalda/RecompAchievements) (`src/runtime_achievements.c`): unlocks,
+  Beaten and Mastered, and leaderboards there.
+- **PKG install** (`scripts/pkg_extract.py`): the game's fake-signed PKG and its update PKG are unpacked once into
+  a game folder, so a separate extraction tool is not needed.
 
 ## What works
 
@@ -58,17 +65,29 @@ Tested on Windows 11 with a Vulkan 1.3 GPU (GeForce RTX 5060 Ti), game version 0
 - Only the tutorial has been played so far; whole songs, scoring and audio sync are not verified.
 - On the first screen ("Connect your guitar controller") the shadow layer the game draws under each card and
   caption shows as a grey, offset copy. It is on that screen only and does not affect play.
-- Linux and macOS builds are inherited from Minus Two and untested with this game.
+- The Linux AppImage is built for every release by GitHub Actions (`.github/workflows/linux.yml`) but has not
+  been played on Linux or a Steam Deck yet. macOS is not built.
 
 ## Playing
 
-1. Build the port (below) and run `python launcher/sixfret_launcher.py`. A packaged build has `SixFret.exe`,
-   the same launcher (`bash packaging/windows/package.sh` makes it in `dist/`).
-2. Choose your Guitar Hero Live folder (the one with `eboot.bin`). The dump must be complete: the `video` and
-   `tracks` folders hold the movies and songs.
+1. Download `sixfret-<version>-windows-x64.zip` (or `sixfret-<version>-linux-x86_64.AppImage`) from the
+   [releases](https://github.com/LilBigJP/SixFret/releases), unzip it and run `SixFret.exe`. Or build it (below)
+   and run `python launcher/sixfret_launcher.py`.
+2. Choose your Guitar Hero Live folder (the one with `eboot.bin`), or press **Install from a PKG…** and pick the
+   game's PKG and then the 1.08 update PKG: they are unpacked once (about 28 GB) into the port's `game` folder. A
+   dumped folder must be complete: the `video` and `tracks` folders hold the movies and songs.
 3. **PLAY**. The first start prepares the game image; shaders are compiled the first time they are needed.
 
-Saves and the shader cache are in the `user` folder next to the port.
+Saves and the shader cache are in the `user` folder next to the port (on Linux in `~/.local/share/sixfret`).
+
+### RecompLauncher
+
+[RecompLauncher](https://recomplauncher.com) sets Six Fret up from your copy (folder or PKGs), shows its window,
+resolution, VSync, frame rate and overlay settings, and plays it, full screen when started from its Big Picture
+mode. `recomplauncher.json` in each release tells it how. From the command line the same works as
+`SixFret.exe --prepare --game=<folder or PKG> [--update=<PKG>]` (progress lines, no window) and
+`SixFret.exe --play --game=<folder or PKG>`. They exit with 21 (no game there), 22 (another game), 23 (an incomplete
+dump) or 24 (a PKG that does not open: only fake-signed PKGs do).
 
 ### Controls
 
@@ -134,6 +153,9 @@ python run.py
   **Supermedo**'s Windows port of **deadinside28**'s [bloodborne_pc](https://github.com/deadinside28/bloodborne_pc).
 - **shadPS4 team** — the [shadPS4](https://github.com/shadps4-emu/shadPS4) video core, and the reference for the
   PS4 libraries' behaviour (NID tables, Videodec2).
+  The PKG format and keys in `scripts/pkg_extract.py` and `scripts/pkg_keys.py` come from its `pkg.cpp` and `keys.h`.
+- [Recomp Achievements](https://github.com/elripalda/RecompAchievements) by Ripalda (with rcheevos and cJSON) and
+  [RecompLauncher](https://recomplauncher.com).
 - **cuesta4** — the shadPS4 rendering fixes SpartanPort carries.
 - [LibAtrac9](https://github.com/Thealexbarney/LibAtrac9), [FreeType](https://freetype.org),
   [FFmpeg](https://ffmpeg.org), [SDL3](https://github.com/libsdl-org/SDL), [Dear ImGui](https://github.com/ocornut/imgui),

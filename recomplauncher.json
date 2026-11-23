@@ -2,14 +2,45 @@
   "$schema": "https://recomplauncher.com/schema/recomplauncher.json",
   "format": 1,
   "name": "Six Fret",
-  "repo": "",
-  "game": {
-    "kind": "folder",
-    "label": "Your dump of Guitar Hero Live (PS4, CUSA02410): the folder with eboot.bin, sce_module and sce_sys.",
-    "check": {
-      "file": "eboot.bin"
+  "repo": "LilBigJP/SixFret",
+  "inputs": [
+    {
+      "id": "game",
+      "label": "Your Guitar Hero Live for PS4 (CUSA02410): the dumped game folder with eboot.bin, sce_module and sce_sys (updated to version 1.08), or the game's fake-signed PKG.",
+      "role": "game",
+      "formats": [
+        {
+          "type": "folder"
+        },
+        {
+          "type": "file",
+          "extensions": [
+            "pkg"
+          ]
+        }
+      ],
+      "check": {
+        "ids": [
+          "CUSA02410",
+          "CUSA02188"
+        ]
+      }
+    },
+    {
+      "id": "update",
+      "label": "The version 1.08 update PKG, when your game is a PKG (a dumped folder has it already).",
+      "role": "update",
+      "optional": true,
+      "formats": [
+        {
+          "type": "file",
+          "extensions": [
+            "pkg"
+          ]
+        }
+      ]
     }
-  },
+  ],
   "start": {
     "program": [
       "SixFret.exe",
@@ -17,8 +48,8 @@
     ],
     "args": [
       "--play",
-      "--game",
-      "{game}"
+      "--game={input:game}",
+      "--update={input:update}"
     ]
   },
   "prepare": {
@@ -28,11 +59,10 @@
     ],
     "args": [
       "--prepare",
-      "--game",
-      "{game}"
+      "--game={input:game}",
+      "--update={input:update}"
     ],
-    "label": "Preparing the game image",
-    "timeout": 600
+    "label": "Unpacking the PKG (when the game is one) and preparing the game image"
   },
   "config": [
     {
@@ -167,6 +197,28 @@
       "defaults": {
         "fps_limit": "60"
       }
+    },
+    {
+      "id": "show_fps",
+      "label": "Performance overlay",
+      "help": "Shows the frame rate in a corner of the screen.",
+      "choices": [
+        {
+          "label": "Off",
+          "set": {
+            "show_fps": "0"
+          }
+        },
+        {
+          "label": "On",
+          "set": {
+            "show_fps": "1"
+          }
+        }
+      ],
+      "defaults": {
+        "show_fps": "0"
+      }
     }
   ],
   "saves": [
@@ -196,7 +248,11 @@
     ]
   },
   "exit_codes": {
-    "20": "This processor lacks an instruction set the game needs. The log says which one."
+    "20": "This processor lacks an instruction set the game needs. The log says which one.",
+    "21": "No Guitar Hero Live was found there: pick the dumped game folder (with eboot.bin) or the game's PKG.",
+    "22": "That is another game. Six Fret plays Guitar Hero Live for PS4 (CUSA02410).",
+    "23": "The dump is incomplete (missing modules, or empty video or tracks folders). Extract the game again.",
+    "24": "The PKG could not be unpacked. Only fake-signed PKGs open; check that the file is complete."
   },
   "actions": [
     {

@@ -1,0 +1,36 @@
+# The Linux AppImage (Steam Deck and other Linux PCs): built on Ubuntu 24.04 for every published
+# release and attached to it beside the Windows zip; by hand (Actions, Run workflow) as a test build.
+name: Linux AppImage
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  appimage:
+    runs-on: ubuntu-24.04
+    env:
+      SF_DEPS: ${{ github.workspace }}/deps
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Dependencies
+        run: PREFIX="$SF_DEPS" bash packaging/linux/ci-deps.sh
+      - name: Build
+        run: bash build.sh
+      - name: AppImage
+        run: LD_LIBRARY_PATH="$SF_DEPS/lib" bash packaging/linux/build.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sixfret-linux
+          path: dist/*.AppImage*
+      - name: Attach to the release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ github.event.release.tag_name }}" dist/*.AppImage dist/*.AppImage.sha256 --clobber

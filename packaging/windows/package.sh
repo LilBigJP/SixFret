@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds dist/sixfret-windows/ (and dist/sixfret-windows.zip): SixFret.exe (the launcher, frozen
+# Builds dist/sixfret-windows/ (and dist/sixfret-<version>-windows-x64.zip): SixFret.exe (the launcher, frozen
 # with PyInstaller so players need no Python), sixfret.exe with the MSYS2 CLANG64 DLLs it needs,
 # the preparation scripts and run.py. Run from an MSYS2 CLANG64 shell after `bash build.sh`.
 # Freezing uses a Windows Python 3.10+ (python.org; WINPYTHON overrides) and a private venv in
@@ -26,11 +26,12 @@ if [[ ! -x out/pyenv/Scripts/python.exe ]]; then
 fi
 # MSYS2 shells may lack LOCALAPPDATA: pip would put its cache in the working directory.
 export PIP_CACHE_DIR=${PIP_CACHE_DIR:-$PWD/out/pip-cache}
-out/pyenv/Scripts/python.exe -m pip install -q --disable-pip-version-check pyinstaller pillow iced-x86==1.21.0
+out/pyenv/Scripts/python.exe -m pip install -q --disable-pip-version-check pyinstaller pillow iced-x86==1.21.0 cryptography
 # The scripts run inside SixFret.exe (--script): the standard modules they import come along.
 hidden=()
 for module in argparse base64 collections hashlib json re shutil socket struct tempfile threading uuid \
-              xml.etree.ElementTree urllib.request ctypes.wintypes iced_x86; do
+              xml.etree.ElementTree urllib.request ctypes.wintypes iced_x86 hmac zlib pkg_extract \
+              cryptography.hazmat.primitives.ciphers; do
     hidden+=(--hidden-import "$module")
 done
 out/pyenv/Scripts/python.exe -m PyInstaller --noconfirm --clean --log-level WARN --windowed --copy-metadata pillow \
@@ -73,10 +74,13 @@ if [[ -n $forbidden ]]; then
     echo "$forbidden" >&2
     exit 1
 fi
+# The release file says what it is: version, system and processor (sixfret-0.1.2-windows-x64.zip).
+version=$(sed -n "s/^VERSION = '\(.*\)'/\1/p" launcher/sixfret_launcher.py | tr -d '\r')
+zip=sixfret-$version-windows-x64.zip
 mkdir -p dist
-rm -f dist/sixfret-windows.zip
+rm -f dist/sixfret-*windows*.zip dist/sixfret-*windows*.zip.sha256
 (cd out/stage && powershell -NoProfile -Command \
-    "Compress-Archive -Path sixfret-windows -DestinationPath ../../dist/sixfret-windows.zip")
+    "Compress-Archive -Path sixfret-windows -DestinationPath ../../dist/$zip")
 
 # Refresh dist/sixfret-windows, keeping what players create there (saves, settings, mods), and
 # only while nothing runs from it: deleting a running launcher's files breaks it.
@@ -92,5 +96,5 @@ else
     cp -r "$dest/." "$play/"
 fi
 # The launcher's updates check the download against this (publish it beside the zip in a release).
-(cd dist && sha256sum sixfret-windows.zip > sixfret-windows.zip.sha256)
-du -sh "$dest" dist/sixfret-windows.zip
+(cd dist && sha256sum "$zip" > "$zip.sha256")
+du -sh "$dest" "dist/$zip"

@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Builds dist/sixfret-x86_64.AppImage (Steam Deck and other Linux PCs) from the Linux build: run
+# Builds dist/sixfret-<version>-linux-x86_64.AppImage (Steam Deck and other Linux PCs) from the Linux build: run
 # `bash build.sh` in the repo root first (from SpartanPort's packaging/linux/build.sh). Libraries are
 # bundled with their dependencies, except the ones that must come from the host (glibc, the Vulkan
 # loader and drivers, X11/Wayland, GL, audio). The Tk launcher is frozen with PyInstaller, so players
 # need no Python. Needs: ldd, patchelf, curl (appimagetool) and the venv of packaging/linux/ci-deps.sh
-# (VENV, default out/venv). dist/sixfret-x86_64.AppImage.sha256 is written beside it for the
+# (VENV, default out/venv). Its .sha256 is written beside it for the
 # launcher's updates.
 set -euo pipefail
 cd -- "$(dirname -- "$0")/../.."
@@ -31,7 +31,8 @@ install -m644 launcher/sixfret.png "$share/launcher/sixfret.png"
 # Pillow's pictures in Tk on Linux (key art, trophy icons), a module PyInstaller does not find itself.
 hidden=()
 for module in argparse base64 collections hashlib json re shutil socket struct tempfile threading uuid \
-              xml.etree.ElementTree urllib.request iced_x86 PIL._tkinter_finder; do
+              xml.etree.ElementTree urllib.request iced_x86 PIL._tkinter_finder hmac zlib pkg_extract \
+              cryptography.hazmat.primitives.ciphers; do
     hidden+=(--hidden-import "$module")
 done
 "$python" -m PyInstaller --noconfirm --clean --log-level WARN --windowed --copy-metadata pillow \
@@ -121,7 +122,9 @@ if [[ -z $tool ]]; then
 fi
 mkdir -p dist
 # Written aside and moved over: replacing a running AppImage in place fails ("Text file busy").
-ARCH=x86_64 "$tool" --appimage-extract-and-run "$appdir" dist/sixfret-x86_64.AppImage.new
-mv -f dist/sixfret-x86_64.AppImage.new dist/sixfret-x86_64.AppImage
-(cd dist && sha256sum sixfret-x86_64.AppImage > sixfret-x86_64.AppImage.sha256)
-ls -lh dist/sixfret-x86_64.AppImage
+version=$(sed -n "s/^VERSION = '\(.*\)'/\1/p" launcher/sixfret_launcher.py)
+image=sixfret-$version-linux-x86_64.AppImage
+ARCH=x86_64 "$tool" --appimage-extract-and-run "$appdir" "dist/$image.new"
+mv -f "dist/$image.new" "dist/$image"
+(cd dist && sha256sum "$image" > "$image.sha256")
+ls -lh "dist/$image"

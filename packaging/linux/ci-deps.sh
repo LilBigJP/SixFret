@@ -49,5 +49,5 @@ ninja -C "$work/sdl" >/dev/null
 # The launcher is frozen with PyInstaller (packaging/linux/build.sh): venv at $VENV.
 VENV=${VENV:-$PWD/out/venv}
 python3 -m venv "$VENV"
-"$VENV/bin/pip" install -q --no-cache-dir pyinstaller pillow iced-x86==1.21.0
+"$VENV/bin/pip" install -q --no-cache-dir pyinstaller pillow iced-x86==1.21.0 cryptography
 echo "Dependencies in $PREFIX; launcher tools in $VENV"
