@@ -16,7 +16,7 @@ jobs:
     env:
       SF_DEPS: ${{ github.workspace }}/deps
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
       - name: Dependencies
@@ -25,7 +25,7 @@ jobs:
         run: bash build.sh
       - name: AppImage
         run: LD_LIBRARY_PATH="$SF_DEPS/lib" bash packaging/linux/build.sh
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: sixfret-linux
           path: dist/*.AppImage*
